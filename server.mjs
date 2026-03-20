@@ -445,7 +445,7 @@ async function start() {
   ║  LLM:        ${(config.llm.provider || 'disabled').padEnd(31)}║
   ║  Telegram:   ${config.telegram.botToken ? 'enabled' : 'disabled'}${' '.repeat(config.telegram.botToken ? 24 : 23)}║
   ║  Discord:    ${config.discord?.botToken ? 'enabled' : config.discord?.webhookUrl ? 'webhook only' : 'disabled'}${' '.repeat(config.discord?.botToken ? 24 : config.discord?.webhookUrl ? 20 : 23)}║
-  ║  SnapTrader: ${config.snapTrade?.accountId ? 'enabled': 'disabled'}║
+  ║  SnapTrader: ${config.snapTrade?.accountId ? 'enabled': 'disabled'}${' '.repeat(14 - String(config.accountId).length)}║
   ╚══════════════════════════════════════════════╝
   `);
 
