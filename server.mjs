@@ -137,7 +137,7 @@ if (telegramAlerter.isConfigured) {
   telegramAlerter.onCommand('/portfolio', async () => {
     if (sweepInProgress) {
       console.log('[Crucix] Sweep already in progress, skipping');
-      return;
+      return "Sweep is in progress, please try again later";
     }
     console.log('[Crucix] Generating Report...')
     telegramAlerter.sendMessage('Generating Report ...')
