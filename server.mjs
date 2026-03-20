@@ -13,7 +13,7 @@ import { synthesize, generateIdeas } from './dashboard/inject.mjs';
 import { MemoryManager } from './lib/delta/index.mjs';
 import { createLLMProvider } from './lib/llm/index.mjs';
 import { generateLLMIdeas, runPortfolioBrief } from './lib/llm/ideas.mjs';
-import { formatToTelegramHTML, TelegramAlerter } from './lib/alerts/telegram.mjs';
+import { formatToTelegramMarkdown, TelegramAlerter } from './lib/alerts/telegram.mjs';
 import { DiscordAlerter } from './lib/alerts/discord.mjs';
 import { SnapTrade } from './lib/alerts/snaptrade.mjs';
 
@@ -139,6 +139,7 @@ if (telegramAlerter.isConfigured) {
       console.log('[Crucix] Sweep already in progress, skipping');
       return;
     }
+    console.log('[Crucix] Generating Report...')
     telegramAlerter.sendMessage('Generating Report ...')
     sweepInProgress = true;
     sweepStartedAt = new Date().toISOString();
@@ -168,13 +169,13 @@ if (telegramAlerter.isConfigured) {
       try {
       const [accountOrders, portfolio] = await Promise.all([snapTrade.getBuyDates(),snapTrade.getTrades()]);
       const result = await runPortfolioBrief(llmProvider, synthesized, delta, previousIdeas, portfolio, accountOrders )
-      return formatToTelegramHTML(result.text)
+      return formatToTelegramMarkdown(result.text)
       } catch(err) {
         console.error("Failed to get Portfolio Briefing: ", err.message)
         telegramAlerter.sendMessage("Failed to get Portfolio Briefing")
       }
       finally {
-        console.log("Report Created at ", new Date().toISOString())
+        console.log("[Crucix] Report Created at", new Date().toISOString())
         console.log(`${'='.repeat(60)}`)
       }
     }
@@ -351,6 +352,8 @@ async function runSweepCycle() {
   console.log(`${'='.repeat(60)}`);
 
   try {
+    // Prelim: Refresh User Trades
+    await snapTrade.RefreshHoldings()
     // 1. Run the full briefing sweep
     const rawData = await fullBriefing();
 
