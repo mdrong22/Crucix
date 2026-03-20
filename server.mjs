@@ -166,12 +166,13 @@ if (telegramAlerter.isConfigured) {
       const previousIdeas = memory.getLastRun()?.ideas || [];
     // 5. LLM-powered trade ideas (LLM-only feature) — isolated so failures don't kill sweep
     if (llmProvider?.isConfigured) {
+      let result;
       try {
       const [accountOrders, portfolio] = await Promise.all([snapTrade.getBuyDates(),snapTrade.getTrades()]);
-      const result = await runPortfolioBrief(llmProvider, synthesized, delta, previousIdeas, portfolio, accountOrders )
+      result = await runPortfolioBrief(llmProvider, synthesized, delta, previousIdeas, portfolio, accountOrders )
       return formatToTelegramMarkdown(result.text)
       } catch(err) {
-        console.error("Failed to get Portfolio Briefing: ", err.message)
+        console.error("Failed to get Portfolio Briefing: ", err.message, '\n', formatToTelegramMarkdown(result.text))
         telegramAlerter.sendMessage("Failed to get Portfolio Briefing")
       }
       finally {
