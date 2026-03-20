@@ -13,7 +13,7 @@ import { synthesize, generateIdeas } from './dashboard/inject.mjs';
 import { MemoryManager } from './lib/delta/index.mjs';
 import { createLLMProvider } from './lib/llm/index.mjs';
 import { generateLLMIdeas, runPortfolioBrief } from './lib/llm/ideas.mjs';
-import { TelegramAlerter } from './lib/alerts/telegram.mjs';
+import { formatToTelegramHTML, TelegramAlerter } from './lib/alerts/telegram.mjs';
 import { DiscordAlerter } from './lib/alerts/discord.mjs';
 import { SnapTrade } from './lib/alerts/snaptrade.mjs';
 
@@ -162,15 +162,20 @@ if (telegramAlerter.isConfigured) {
       // 4. Delta computation + memory
       const delta = memory.addRun(synthesized);
       synthesized.delta = delta;
-
+      const previousIdeas = memory.getLastRun()?.ideas || [];
     // 5. LLM-powered trade ideas (LLM-only feature) — isolated so failures don't kill sweep
     if (llmProvider?.isConfigured) {
       try {
       const [accountOrders, portfolio] = await Promise.all([snapTrade.getBuyDates(),snapTrade.getTrades()]);
-      const result = runPortfolioBrief(llmProvider, synthesized, delta, previousIdeas, portfolio, accountOrders )
-       return result
+      const result = await runPortfolioBrief(llmProvider, synthesized, delta, previousIdeas, portfolio, accountOrders )
+      return formatToTelegramHTML(result.text)
       } catch(err) {
-        console.error("Failed to get Portfolio Briefing")
+        console.error("Failed to get Portfolio Briefing: ", err.message)
+        telegramAlerter.sendMessage("Failed to get Portfolio Briefing")
+      }
+      finally {
+        console.log("Report Created at ", new Date().toISOString())
+        console.log(`${'='.repeat(60)}`)
       }
     }
   } catch (err) {
