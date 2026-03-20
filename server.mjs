@@ -439,13 +439,13 @@ async function start() {
   ║           CRUCIX INTELLIGENCE ENGINE         ║
   ║          Local Palantir · 26 Sources         ║
   ╠══════════════════════════════════════════════╣
-  ║  Dashboard:  http://localhost:${port}${' '.repeat(14 - String(port).length)}║
+  ║  Dashboard:  http://localhost:${port}${' '.repeat(15 - String(port).length)}║
   ║  Health:     http://localhost:${port}/api/health${' '.repeat(4 - String(port).length)}║
-  ║  Refresh:    Every ${config.refreshIntervalMinutes} min${' '.repeat(20 - String(config.refreshIntervalMinutes).length)}║
-  ║  LLM:        ${(config.llm.provider || 'disabled').padEnd(31)}║
-  ║  Telegram:   ${config.telegram.botToken ? 'enabled' : 'disabled'}${' '.repeat(config.telegram.botToken ? 24 : 23)}║
-  ║  Discord:    ${config.discord?.botToken ? 'enabled' : config.discord?.webhookUrl ? 'webhook only' : 'disabled'}${' '.repeat(config.discord?.botToken ? 24 : config.discord?.webhookUrl ? 20 : 23)}║
-  ║  SnapTrader: ${config.snapTrade?.accountId ? 'enabled': 'disabled'}${' '.repeat(14 - String(config.accountId).length)}║
+  ║  Refresh:    Every ${config.refreshIntervalMinutes} min${' '.repeat(22 - String(config.refreshIntervalMinutes).length)}║
+  ║  LLM:        ${(config.llm.provider || 'disabled').padEnd(32)}║
+  ║  Telegram:   ${config.telegram.botToken ? 'enabled' : 'disabled'}${' '.repeat(config.telegram.botToken ? 25 : 24)}║
+  ║  Discord:    ${config.discord?.botToken ? 'enabled' : config.discord?.webhookUrl ? 'webhook only' : 'disabled'}${' '.repeat(config.discord?.botToken ? 24 : config.discord?.webhookUrl ? 20 : 24)}║
+  ║  SnapTrader: ${config.snapTrade?.accountId ? 'enabled' : 'disabled'}${' '.repeat(config.snapTrade.accountId ? 25 : 24)}║
   ╚══════════════════════════════════════════════╝
   `);
 
