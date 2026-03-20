@@ -12,7 +12,7 @@ import { fullBriefing } from './apis/briefing.mjs';
 import { synthesize, generateIdeas } from './dashboard/inject.mjs';
 import { MemoryManager } from './lib/delta/index.mjs';
 import { createLLMProvider } from './lib/llm/index.mjs';
-import { generateLLMIdeas } from './lib/llm/ideas.mjs';
+import { generateLLMIdeas, runPortfolioBrief } from './lib/llm/ideas.mjs';
 import { TelegramAlerter } from './lib/alerts/telegram.mjs';
 import { DiscordAlerter } from './lib/alerts/discord.mjs';
 import { SnapTrade } from './lib/alerts/snaptrade.mjs';
@@ -135,8 +135,50 @@ if (telegramAlerter.isConfigured) {
   });
 
   telegramAlerter.onCommand('/portfolio', async () => {
-    return '📊 Portfolio integration requires Alpaca MCP connection.\nUse the Crucix dashboard or Claude agent for portfolio queries.';
-  });
+    if (sweepInProgress) {
+      console.log('[Crucix] Sweep already in progress, skipping');
+      return;
+    }
+    telegramAlerter.sendMessage('Generating Report ...')
+    sweepInProgress = true;
+    sweepStartedAt = new Date().toISOString();
+    broadcast({ type: 'sweep_start', timestamp: sweepStartedAt });
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`[Crucix] Starting sweep at ${new Date().toLocaleTimeString()}`);
+    console.log(`${'='.repeat(60)}`);
+
+    try {
+      // 1. Run the full briefing sweep
+      const rawData = await fullBriefing();
+
+      // 2. Save to runs/latest.json
+      writeFileSync(join(RUNS_DIR, 'latest.json'), JSON.stringify(rawData, null, 2));
+      lastSweepTime = new Date().toISOString();
+
+      // 3. Synthesize into dashboard format
+      console.log('[Crucix] Synthesizing dashboard data...');
+      const synthesized = await synthesize(rawData);
+
+      // 4. Delta computation + memory
+      const delta = memory.addRun(synthesized);
+      synthesized.delta = delta;
+
+    // 5. LLM-powered trade ideas (LLM-only feature) — isolated so failures don't kill sweep
+    if (llmProvider?.isConfigured) {
+      try {
+      const [accountOrders, portfolio] = await Promise.all([snapTrade.getBuyDates(),snapTrade.getTrades()]);
+      const result = runPortfolioBrief(llmProvider, synthesized, delta, previousIdeas, portfolio, accountOrders )
+       return result
+      } catch(err) {
+        console.error("Failed to get Portfolio Briefing")
+      }
+    }
+  } catch (err) {
+    console.error('[Crucix] Sweep failed:', err.message);
+    broadcast({ type: 'sweep_error', error: err.message });
+  } finally {
+    sweepInProgress = false;
+  }});
 
   // Start polling for bot commands
   telegramAlerter.startPolling(config.telegram.botPollingInterval);
